@@ -4,8 +4,9 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 
-const authRoutes = require('./routes/authroutes');
-const productRoutes = require('./routes/productroutes');
+const authRoutes = require('./routes/authRoutes');
+const productRoutes = require('./routes/productRoutes');
+const saleRoutes = require('./routes/saleRoutes');
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/sales', saleRoutes);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../public')));
@@ -32,7 +34,7 @@ app.use((req, res) => {
 });
 
 // Connect MongoDB and Start Server
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('MongoDB Connected');
     const port = process.env.PORT || 3000;

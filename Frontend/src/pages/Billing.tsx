@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -79,26 +78,72 @@ export default function Billing() {
   }, [searchTerm]);
 
   // Handle add to cart
-  const handleAddToCart = (product: Product) => {
-    if (product.stock === 0) {
+  const handleAddToCart = async (product: Product) => {
+    // Check real-time stock before adding
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/${product.id}`);
+      const data = await response.json();
+      
+      if (!data.success || data.data.stock === 0) {
+        toast({
+          title: "Product unavailable",
+          description: "This product is out of stock",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if adding more would exceed available stock
+      const existingItem = cartItems.find(item => item.product.id === product.id);
+      if (existingItem && (existingItem.quantity + 1) > data.data.stock) {
+        toast({
+          title: "Insufficient stock",
+          description: `Only ${data.data.stock} units available`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      addToCart(product, 1);
+      setSearchTerm("");
+      setSearchResults([]);
+    } catch (error) {
+      console.error("Error checking product stock:", error);
       toast({
-        title: "Product unavailable",
-        description: "This product is out of stock",
+        title: "Error",
+        description: "Failed to verify product stock",
         variant: "destructive",
       });
-      return;
     }
-    
-    addToCart(product, 1);
-    setSearchTerm("");
-    setSearchResults([]);
   };
 
   // Handle increase quantity
-  const handleIncreaseQuantity = (productId: string) => {
+  const handleIncreaseQuantity = async (productId: string) => {
     const item = cartItems.find((item) => item.product.id === productId);
     if (item) {
-      updateQuantity(productId, item.quantity + 1);
+      try {
+        // Check real-time stock before increasing
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/${productId}`);
+        const data = await response.json();
+        
+        if (!data.success || (item.quantity + 1) > data.data.stock) {
+          toast({
+            title: "Insufficient stock",
+            description: `Only ${data.data.stock} units available`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        updateQuantity(productId, item.quantity + 1);
+      } catch (error) {
+        console.error("Error checking product stock:", error);
+        toast({
+          title: "Error",
+          description: "Failed to verify product stock",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -125,6 +170,35 @@ export default function Billing() {
 
     setIsCompleting(true);
     try {
+      // First verify all items are still in stock
+      const stockChecks = await Promise.all(
+        cartItems.map(async (item) => {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/${item.product.id}`);
+          const data = await response.json();
+          return {
+            productId: item.product.id,
+            requested: item.quantity,
+            available: data.data.stock,
+          };
+        })
+      );
+
+      // Check if any items are out of stock
+      const outOfStock = stockChecks.find(
+        (check) => check.requested > check.available
+      );
+
+      if (outOfStock) {
+        toast({
+          title: "Stock changed",
+          description: `Some items are no longer available in requested quantity`,
+          variant: "destructive",
+        });
+        setIsCompleting(false);
+        return;
+      }
+
+      // Create the sale and update inventory
       const res = await createSale(cartItems);
       if (res.success && res.data) {
         setSaleId(res.data.id);
@@ -132,7 +206,7 @@ export default function Billing() {
         clearCart();
         toast({
           title: "Sale completed",
-          description: "Sale has been completed successfully",
+          description: "Sale has been completed and inventory updated",
         });
       } else {
         toast({

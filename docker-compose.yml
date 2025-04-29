@@ -1,10 +1,38 @@
+version: '3.8'
+
 services:
-  server:
-    image: server
+  frontend:
     build:
-      context: server
-      dockerfile: ./Dockerfile
-    environment:
-      NODE_ENV: production
+      context: ./Frontend
+      dockerfile: Dockerfile.dev
     ports:
-      - 3000:3000
+      - "5173:5173"
+    volumes:
+      - ./Frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    environment:
+      - MONGODB_URI=mongodb+srv://Parthhh13:parth1301@cluster0.sq9ro.mongodb.net/stock-savvy-db?retryWrites=true&w=majority
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:
