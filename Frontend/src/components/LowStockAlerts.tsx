@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Product } from "@/types";
-import { getProducts } from "@/api/productApi";
+import { getLowStockProducts } from "@/api/productApi";
 import { useAuth } from "@/context/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -14,12 +14,9 @@ export function LowStockAlerts() {
     const fetchLowStockProducts = async () => {
       try {
         setIsLoading(true);
-        const products = await getProducts(token);
-        // Filter products where stock is less than or equal to reorder level
-        const lowStock = products.filter(
-          (product) => product.stock <= product.reorderLevel
-        );
-        setLowStockProducts(lowStock);
+        // Use the dedicated API endpoint for low stock products
+        const products = await getLowStockProducts(token);
+        setLowStockProducts(products);
       } catch (error) {
         console.error("Error fetching low stock products:", error);
       } finally {

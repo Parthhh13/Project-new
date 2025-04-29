@@ -1,4 +1,3 @@
-
 import { 
   Product, 
   User, 
@@ -38,6 +37,7 @@ export const users: User[] = [
 // Mock Products
 export const products: Product[] = [
   {
+    _id: "1",
     id: "1",
     name: "Organic Bananas",
     category: "Fruits",
@@ -49,6 +49,7 @@ export const products: Product[] = [
     updatedAt: "2023-04-15T00:00:00.000Z",
   },
   {
+    _id: "2",
     id: "2",
     name: "Whole Milk",
     category: "Dairy",
@@ -60,6 +61,7 @@ export const products: Product[] = [
     updatedAt: "2023-04-15T00:00:00.000Z",
   },
   {
+    _id: "3",
     id: "3",
     name: "White Bread",
     category: "Bakery",
@@ -71,6 +73,7 @@ export const products: Product[] = [
     updatedAt: "2023-04-15T00:00:00.000Z",
   },
   {
+    _id: "4",
     id: "4",
     name: "Chicken Breast",
     category: "Meat",
@@ -82,6 +85,7 @@ export const products: Product[] = [
     updatedAt: "2023-04-15T00:00:00.000Z",
   },
   {
+    _id: "5",
     id: "5",
     name: "Eggs (Dozen)",
     category: "Dairy",
@@ -93,6 +97,7 @@ export const products: Product[] = [
     updatedAt: "2023-04-15T00:00:00.000Z",
   },
   {
+    _id: "6",
     id: "6",
     name: "Tomatoes",
     category: "Vegetables",
@@ -104,6 +109,7 @@ export const products: Product[] = [
     updatedAt: "2023-04-15T00:00:00.000Z",
   },
   {
+    _id: "7",
     id: "7",
     name: "Rice (5kg)",
     category: "Grains",
@@ -115,6 +121,7 @@ export const products: Product[] = [
     updatedAt: "2023-04-15T00:00:00.000Z",
   },
   {
+    _id: "8",
     id: "8",
     name: "Pasta",
     category: "Grains",
@@ -126,6 +133,7 @@ export const products: Product[] = [
     updatedAt: "2023-04-15T00:00:00.000Z",
   },
   {
+    _id: "9",
     id: "9",
     name: "Orange Juice",
     category: "Beverages",
@@ -137,6 +145,7 @@ export const products: Product[] = [
     updatedAt: "2023-04-15T00:00:00.000Z",
   },
   {
+    _id: "10",
     id: "10",
     name: "Potato Chips",
     category: "Snacks",
@@ -148,6 +157,7 @@ export const products: Product[] = [
     updatedAt: "2023-04-15T00:00:00.000Z",
   },
   {
+    _id: "11",
     id: "11",
     name: "Chocolate Bar",
     category: "Snacks",
@@ -159,6 +169,7 @@ export const products: Product[] = [
     updatedAt: "2023-04-15T00:00:00.000Z",
   },
   {
+    _id: "12",
     id: "12",
     name: "Coffee",
     category: "Beverages",
@@ -249,7 +260,8 @@ export const bestSellingProducts: BestSellingProduct[] = [
   },
 ];
 
-// Mock Stock Alerts
+// Stock Alerts are now fetched from the API using getLowStockProducts
+// This mock data is kept for reference only
 export const stockAlerts: StockAlert[] = [
   {
     id: "11",

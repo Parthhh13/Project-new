@@ -50,3 +50,23 @@ exports.lowStockProducts = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Get total product count
+exports.getProductCount = async (req, res) => {
+  try {
+    const count = await Product.countDocuments();
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get low stock count
+exports.getLowStockCount = async (req, res) => {
+  try {
+    const count = await Product.countDocuments({ stock: { $lte: 5 } });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

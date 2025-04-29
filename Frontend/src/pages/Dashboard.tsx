@@ -7,9 +7,9 @@ import { RecentSales } from "@/components/dashboard/RecentSales";
 import {
   getDashboardStats,
   getBestSellingProducts,
-  getStockAlerts,
   getRecentSales,
 } from "@/utils/api";
+import { getProductCount, getLowStockCount, getLowStockProducts } from "@/api/productApi";
 import {
   DashboardStats,
   BestSellingProduct,
@@ -25,23 +25,45 @@ import {
 import { BarChart } from "@/components/dashboard/BarChart";
 import { monthlySalesData, categorySalesData } from "@/utils/mockData";
 import { DoughnutChart } from "@/components/dashboard/DoughnutChart";
-import { LowStockAlerts } from "@/components/LowStockAlerts";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [bestSelling, setBestSelling] = useState<BestSellingProduct[]>([]);
   const [stockAlerts, setStockAlerts] = useState<StockAlert[]>([]);
   const [recentSales, setRecentSales] = useState<RecentSale[]>([]);
+  const [productCount, setProductCount] = useState<number>(0);
+  const [lowStockCount, setLowStockCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
+  const { token } = useAuth();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
       try {
-        const [statsRes, bestSellingRes, alertsRes, salesRes] = await Promise.all([
+        // Fetch product count, low stock count, and low stock products from the actual database
+        const [count, lowStock, lowStockProducts] = await Promise.all([
+          getProductCount(),
+          getLowStockCount(),
+          getLowStockProducts(token)
+        ]);
+        setProductCount(count);
+        setLowStockCount(lowStock);
+        
+        // Transform the low stock products data to match StockAlert type
+        const transformedAlerts = lowStockProducts.map(product => ({
+          id: product._id,
+          name: product.name,
+          currentStock: product.stock,
+          reorderLevel: product.reorderLevel,
+          supplier: product.supplier,
+          status: product.stock === 0 ? 'outOfStock' : 'low'
+        }));
+        setStockAlerts(transformedAlerts);
+        
+        const [statsRes, bestSellingRes, salesRes] = await Promise.all([
           getDashboardStats(),
           getBestSellingProducts(),
-          getStockAlerts(),
           getRecentSales(),
         ]);
 
@@ -51,10 +73,6 @@ export default function Dashboard() {
 
         if (bestSellingRes.success && bestSellingRes.data) {
           setBestSelling(bestSellingRes.data);
-        }
-
-        if (alertsRes.success && alertsRes.data) {
-          setStockAlerts(alertsRes.data);
         }
 
         if (salesRes.success && salesRes.data) {
@@ -68,17 +86,15 @@ export default function Dashboard() {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [token]);
 
   return (
     <AppLayout allowedRoles={["admin", "staff"]}>
       <div className="space-y-6">
-        <LowStockAlerts />
-        
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Products"
-            value={stats?.totalProducts ?? 0}
+            value={productCount}
             description="Total products in inventory"
             icon={Package}
             iconColor="text-blue-500"
@@ -101,7 +117,7 @@ export default function Dashboard() {
           />
           <StatCard
             title="Low Stock Items"
-            value={stats?.lowStockCount ?? 0}
+            value={lowStockCount}
             description="Products needing attention"
             icon={AlertTriangle}
             iconColor="text-red-500"

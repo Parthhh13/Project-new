@@ -6,6 +6,18 @@ export const getProducts = async () => {
   return response.data; // returns array of products
 };
 
+// Get total product count
+export const getProductCount = async () => {
+  const response = await axios.get('/products/count');
+  return response.data.count; // returns the count
+};
+
+// Get low stock count
+export const getLowStockCount = async () => {
+  const response = await axios.get('/products/low-stock/count');
+  return response.data.count; // returns the count
+};
+
 // Add a product
 export const addProduct = async (productData: any, token: string) => {
   const response = await axios.post('/products', productData, {

@@ -21,7 +21,13 @@ app.use('/api/products', productRoutes);
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
+// Using a more specific approach to avoid path-to-regexp issues
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public', 'index.html'));
+});
+
+// Catch-all route for all other paths
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
