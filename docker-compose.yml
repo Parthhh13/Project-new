@@ -6,12 +6,12 @@ services:
       context: ./Frontend
       dockerfile: Dockerfile.dev
     ports:
-      - "5173:5173"
+      - "8081:8081"
     volumes:
       - ./Frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://localhost:3000
+      - VITE_API_URL=http://localhost:8081
     depends_on:
       - backend
 
@@ -26,6 +26,8 @@ services:
       - /app/node_modules
     environment:
       - MONGODB_URI=mongodb+srv://Parthhh13:parth1301@cluster0.sq9ro.mongodb.net/stock-savvy-db?retryWrites=true&w=majority
+      - JWT_SECRET=your-jwt-secret-key-replace-this-in-production
+      - PORT=3000
 
   mongodb:
     image: mongo:latest
