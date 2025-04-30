@@ -95,7 +95,7 @@ export default function Dashboard() {
           <StatCard
             title="Total Products"
             value={productCount}
-            description="Total products in inventory"
+            description="Total products in inventory MY name is parth"
             icon={Package}
             iconColor="text-blue-500"
           />

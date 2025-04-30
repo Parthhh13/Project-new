@@ -60,7 +60,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center mb-8">
           <Store className="h-10 w-10 text-primary mr-2" />
-          <h1 className="text-2xl font-bold text-primary">Stock Savvy Supermarket</h1>
+          <h1 className="text-2xl font-bold text-primary">Stock Savvy Supermarket </h1>
         </div>
         
         <Card>
