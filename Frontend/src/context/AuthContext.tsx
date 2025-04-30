@@ -5,12 +5,17 @@ import { loginUser } from "@/api/authApi"; // real backend login
 import { useToast } from "@/components/ui/use-toast";
 import { AuthState, User } from "@/types";
 
-// Default auth state
+// Default auth state with auto-authentication for development
 const defaultAuthState: AuthState = {
-  user: null,
-  token: null,
-  isAuthenticated: false,
-  isLoading: true,
+  user: {
+    id: "temp-user-id",
+    name: "Test User",
+    email: "test@example.com",
+    role: "admin" // giving admin role for full access
+  },
+  token: "temp-token",
+  isAuthenticated: true, // Always authenticated
+  isLoading: false,
   error: null,
 };
 
@@ -26,76 +31,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>(defaultAuthState);
   const { toast } = useToast();
 
-  // Initialize auth from localStorage
+  // Initialize auth - always authenticated for development
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-
-    if (token && user) {
-      setAuthState({
-        user,
-        token,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-    } else {
-      setAuthState({
-        ...defaultAuthState,
-        isLoading: false,
-      });
-    }
+    setAuthState(defaultAuthState);
   }, []);
 
-  // Login function (calls backend)
+  // Login function (bypassed for development)
   const login = async (email: string, password: string) => {
-    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      const res = await loginUser(email, password);
-
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("user", JSON.stringify(res.user));
-
-      setAuthState({
-        user: res.user,
-        token: res.token,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${res.user.name}!`,
-      });
-    } catch (error: any) {
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: error.message || "Login failed",
-      }));
-
-      toast({
-        title: "Login failed",
-        description: error.message || "Invalid credentials",
-        variant: "destructive",
-      });
-
-      throw error;
-    }
+    // Automatically "login" without API call
+    setAuthState(defaultAuthState);
+    toast({
+      title: "Login successful",
+      description: "Welcome to the dashboard!",
+    });
   };
 
-  // Logout function
+  // Logout function (still functional but will re-authenticate on next render)
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-
-    setAuthState({
-      ...defaultAuthState,
-      isLoading: false,
-    });
-
+    setAuthState(defaultAuthState);
     toast({
       title: "Logged out",
       description: "You have been successfully logged out",
@@ -112,7 +67,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 // Custom hook
 export function useAuth() {
   const context = useContext(AuthContext);
-
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }

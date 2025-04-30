@@ -4,11 +4,6 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { StockAlerts } from "@/components/dashboard/StockAlerts";
 import { BestSellingProducts } from "@/components/dashboard/BestSellingProducts";
 import { RecentSales } from "@/components/dashboard/RecentSales";
-import {
-  getDashboardStats,
-  getBestSellingProducts,
-  getRecentSales,
-} from "@/utils/api";
 import { getProductCount, getLowStockCount, getLowStockProducts } from "@/api/productApi";
 import {
   DashboardStats,
@@ -26,31 +21,41 @@ import { BarChart } from "@/components/dashboard/BarChart";
 import { monthlySalesData, categorySalesData } from "@/utils/mockData";
 import { DoughnutChart } from "@/components/dashboard/DoughnutChart";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Dashboard() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalProducts: 0,
+    totalSales: 0,
+    totalRevenue: 0,
+    lowStockCount: 0
+  });
   const [bestSelling, setBestSelling] = useState<BestSellingProduct[]>([]);
   const [stockAlerts, setStockAlerts] = useState<StockAlert[]>([]);
   const [recentSales, setRecentSales] = useState<RecentSale[]>([]);
-  const [productCount, setProductCount] = useState<number>(0);
-  const [lowStockCount, setLowStockCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const { token } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
       try {
-        // Fetch product count, low stock count, and low stock products from the actual database
-        const [count, lowStock, lowStockProducts] = await Promise.all([
+        // Fetch real data from backend
+        const [productCount, lowStock, lowStockProducts] = await Promise.all([
           getProductCount(),
           getLowStockCount(),
           getLowStockProducts(token)
         ]);
-        setProductCount(count);
-        setLowStockCount(lowStock);
-        
-        // Transform the low stock products data to match StockAlert type
+
+        // Update stats with real data
+        setStats(prev => ({
+          ...prev,
+          totalProducts: productCount,
+          lowStockCount: lowStock
+        }));
+
+        // Transform low stock products data
         const transformedAlerts = lowStockProducts.map(product => ({
           id: product._id,
           name: product.name,
@@ -60,33 +65,21 @@ export default function Dashboard() {
           status: product.stock === 0 ? 'outOfStock' : 'low'
         }));
         setStockAlerts(transformedAlerts);
-        
-        const [statsRes, bestSellingRes, salesRes] = await Promise.all([
-          getDashboardStats(),
-          getBestSellingProducts(),
-          getRecentSales(),
-        ]);
 
-        if (statsRes.success && statsRes.data) {
-          setStats(statsRes.data);
-        }
-
-        if (bestSellingRes.success && bestSellingRes.data) {
-          setBestSelling(bestSellingRes.data);
-        }
-
-        if (salesRes.success && salesRes.data) {
-          setRecentSales(salesRes.data);
-        }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard data",
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, [token]);
+  }, [token, toast]);
 
   return (
     <AppLayout allowedRoles={["admin", "staff"]}>
@@ -94,36 +87,34 @@ export default function Dashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Products"
-            value={productCount}
+            value={stats.totalProducts}
             description="Total products in inventory"
             icon={Package}
             iconColor="text-blue-500"
           />
           <StatCard
             title="Total Sales"
-            value={stats?.totalSales ?? 0}
+            value={stats.totalSales}
             description="Total sales made"
             icon={ShoppingCart}
             iconColor="text-green-500"
-            trend={{ value: 12, isPositive: true }}
           />
           <StatCard
             title="Revenue"
-            value={`$${stats?.totalRevenue.toFixed(2) ?? "0.00"}`}
+            value={`$${stats.totalRevenue.toFixed(2)}`}
             description="Total revenue generated"
             icon={DollarSign}
             iconColor="text-amber-500"
-            trend={{ value: 8.5, isPositive: true }}
           />
           <StatCard
             title="Low Stock Items"
-            value={lowStockCount}
+            value={stats.lowStockCount}
             description="Products needing attention"
             icon={AlertTriangle}
             iconColor="text-red-500"
           />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           <div className="grid gap-6 h-full">
             <BestSellingProducts products={bestSelling} isLoading={isLoading} />
@@ -133,7 +124,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <BarChart data={monthlySalesData} title="Monthly Sales (2023)" />
           </div>

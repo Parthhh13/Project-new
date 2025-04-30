@@ -8,7 +8,15 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "0.0.0.0",
     port: 8081,
-    strictPort: true // This ensures Vite only uses this specific port
+    strictPort: true, // This ensures Vite only uses this specific port
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+        ws: true // Enable WebSocket proxy
+      }
+    }
   },
   plugins: [
     react(),

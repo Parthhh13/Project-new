@@ -44,7 +44,12 @@ exports.deleteProduct = async (req, res) => {
 // Get low-stock products
 exports.lowStockProducts = async (req, res) => {
   try {
-    const lowStock = await Product.find({ stock: { $lte: 5 } });
+    // Find products where stock is less than or equal to reorderLevel
+    const lowStock = await Product.find({
+      $expr: {
+        $lte: ["$stock", "$reorderLevel"]
+      }
+    });
     res.status(200).json(lowStock);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -64,7 +69,12 @@ exports.getProductCount = async (req, res) => {
 // Get low stock count
 exports.getLowStockCount = async (req, res) => {
   try {
-    const count = await Product.countDocuments({ stock: { $lte: 5 } });
+    // Count products where stock is less than or equal to reorderLevel
+    const count = await Product.countDocuments({
+      $expr: {
+        $lte: ["$stock", "$reorderLevel"]
+      }
+    });
     res.status(200).json({ count });
   } catch (error) {
     res.status(500).json({ message: error.message });
