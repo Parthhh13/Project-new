@@ -2,40 +2,49 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const path = require('path');
 
+// Load environment variables
+dotenv.config();
+
+// Import routes
 const authRoutes = require('./routes/authroutes');
 const productRoutes = require('./routes/productroutes');
 
-dotenv.config();
-
+// Initialize express app
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// API routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 
-// Serve static files from the React app
-app.use(express.static(path.join(__dirname, '../public')));
-
-// Handle React routing, return all requests to React app
-// Using a more specific approach to avoid path-to-regexp issues
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public', 'index.html'));
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    message: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
 
-// Catch-all route for all other paths
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, '../public', 'index.html'));
-});
-
-// Connect MongoDB and Start Server
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
+// Database connection and server startup
+const startServer = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
     console.log('MongoDB Connected');
-    const port = process.env.PORT || 3000;
-    app.listen(port, () => console.log(`Server running on port ${port}`));
-  })
-  .catch(err => console.error('MongoDB connection error:', err));
+    
+    const port = process.env.PORT || 5000;
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  } catch (err) {
+    console.error('Failed to connect to MongoDB:', err);
+    process.exit(1);
+  }
+};
+
+startServer();
